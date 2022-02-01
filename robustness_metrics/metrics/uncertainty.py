@@ -368,8 +368,6 @@ class _KerasOracleCollaborativeAUCMetric(tf.keras.metrics.AUC):
       raise ValueError("oracle_fraction must be between 0 and 1.")
     if max_oracle_count and max_oracle_count < 0:
       raise ValueError("max_oracle_count must be a non-negative integer.")
-    if oracle_threshold and not 0 <= oracle_fraction <= 1:
-      raise ValueError("oracle_threshold must be between 0 and 1.")
     if num_bins <= 1:
       raise ValueError("num_bins must be > 1.")
     if dtype and not dtype.is_floating:
@@ -1389,8 +1387,7 @@ def _get_bin_edges(bin_assign, probs):
     assert bin_edges[-1] == max(bin_edges) == max(probs)
     assert bin_edges[0] == min(bin_edges) == min(probs)
 
-  bin_upper_bounds = bin_edges[1:]
-  return bin_upper_bounds
+  return bin_edges[1:]
 
 
 class _GeneralCalibrationErrorMetric:
@@ -1443,19 +1440,18 @@ class _GeneralCalibrationErrorMetric:
     else:
       raise NotImplementedError
 
-    bin_edges = _get_bin_edges(bin_assign, probs)
-    return bin_edges
+    return _get_bin_edges(bin_assign, probs)
 
   def _get_upper_bounds(self, probs_slice, labels):
     """Delegate construction of bin_upper_bounds to appropriate case-handler."""
 
     if self.binning_scheme == "adaptive" and self.num_bins is not None:
       bin_upper_bounds = _get_adaptive_bins(probs_slice, self.num_bins)
-    elif self.binning_scheme == "adaptive" and self.num_bins is None:
+    elif self.binning_scheme == "adaptive":
       bin_upper_bounds = self._get_mon_sweep_bins(probs_slice, labels)
     elif self.binning_scheme == "even" and self.num_bins is None:
       bin_upper_bounds = self._get_mon_sweep_bins(probs_slice, labels)
-    elif self.binning_scheme == "even" and self.num_bins is not None:
+    elif self.binning_scheme == "even":
       bin_upper_bounds = np.histogram_bin_edges([],
                                                 bins=self.num_bins,
                                                 range=(0.0, 1.0))[1:]
@@ -1539,8 +1535,6 @@ class _GeneralCalibrationErrorMetric:
       calibration_error = self._get_calibration_error(probs_slice, labels,
                                                       bin_upper_bounds)
 
-    # If class_conditional is true, predictions from different classes are
-    # binned separately.
     else:
       # Initialize list for class calibration errors.
       class_calibration_error_list = []
@@ -1548,24 +1542,18 @@ class _GeneralCalibrationErrorMetric:
         if not self.max_prob:
           probs_slice = probs[:, j]
           labels = labels_matrix[:, j]
-          labels = labels[probs_slice > self.threshold]
-          probs_slice = probs_slice[probs_slice > self.threshold]
-          bin_upper_bounds = self._get_upper_bounds(probs_slice, labels)
-
-          calibration_error = self._get_calibration_error(
-              probs_slice, labels, bin_upper_bounds)
-          class_calibration_error_list.append(calibration_error / num_classes)
         else:
           # In the case where we use all datapoints,
           # max label has to be applied before class splitting.
           labels = labels_matrix[np.argmax(probs, axis=1) == j][:, j]
           probs_slice = probs[np.argmax(probs, axis=1) == j][:, j]
-          labels = labels[probs_slice > self.threshold]
-          probs_slice = probs_slice[probs_slice > self.threshold]
-          bin_upper_bounds = self._get_upper_bounds(probs_slice, labels)
-          calibration_error = self._get_calibration_error(
-              probs_slice, labels, bin_upper_bounds)
-          class_calibration_error_list.append(calibration_error / num_classes)
+        labels = labels[probs_slice > self.threshold]
+        probs_slice = probs_slice[probs_slice > self.threshold]
+        bin_upper_bounds = self._get_upper_bounds(probs_slice, labels)
+
+        calibration_error = self._get_calibration_error(
+            probs_slice, labels, bin_upper_bounds)
+        class_calibration_error_list.append(calibration_error / num_classes)
       calibration_error = np.sum(class_calibration_error_list)
 
     if self.norm == "l2":
@@ -1868,26 +1856,20 @@ class IsotonicRegression(metrics_base.FullBatchMetric):
        calculated independently for each class.
      use_dataset_labelset: Boolean values, from metrics_base.FullBatchMetric
     """
-    if not pickle_path:
-      self._pickle_path = DEFAULT_PICKLE_PATH
-    else:
-      self._pickle_path = pickle_path
+    self._pickle_path = DEFAULT_PICKLE_PATH if not pickle_path else pickle_path
     super().__init__(dataset_info)
 
-  def _get_pickle_paths(self, number_of_classes: int) ->  Union[List[str], str]:
+  def _get_pickle_paths(self, number_of_classes: int) -> Union[List[str], str]:
     """Returns paths to where rescaling params are written are stored in a list.
 
     Args:
       number_of_classes: number of model classes for detection.
     """
-    if number_of_classes > 1:
-      pickle_class_paths = []
-      for class_i in range(number_of_classes):
-        pickle_class_paths.append(
-            os.path.join(self._pickle_path, f"class_{class_i}.pickle"))
-    else:
-      pickle_class_paths = os.path.join(self._pickle_path, "class_0.pickle")
-    return pickle_class_paths
+    return ([
+        os.path.join(self._pickle_path, f"class_{class_i}.pickle")
+        for class_i in range(number_of_classes)
+    ] if number_of_classes > 1 else os.path.join(self._pickle_path,
+                                                 "class_0.pickle"))
 
   def fit(self, all_predictions: List[np.ndarray],
           all_labels: List[int]) -> None:

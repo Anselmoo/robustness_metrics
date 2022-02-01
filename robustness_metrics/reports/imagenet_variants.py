@@ -321,11 +321,9 @@ class ImagenetVariantsEnsembleGceSweepReport(ImagenetVariantsGceSweepReport):
   def _get_full_metric_key(self, dataset_name, metric_name, metric_key):
     _, _, diversity_metric_kwargs = registry.parse_name_and_kwargs(metric_name)
     is_normalized = diversity_metric_kwargs["normalize_disagreement"]
-    if metric_key == "disagreement" and is_normalized:
-      full_metric_key = f"{dataset_name}/normalized_{metric_key}"
-    else:
-      full_metric_key = f"{dataset_name}/{metric_key}"
-    return full_metric_key
+    return (f"{dataset_name}/normalized_{metric_key}"
+            if metric_key == "disagreement" and is_normalized else
+            f"{dataset_name}/{metric_key}")
 
   def add_measurement(self, dataset_spec, metric_name, metric_results):
     if metric_name not in [
@@ -337,9 +335,9 @@ class ImagenetVariantsEnsembleGceSweepReport(ImagenetVariantsGceSweepReport):
       dataset_name, _, dataset_kwargs = registry.parse_name_and_kwargs(
           dataset_spec)
 
-      if dataset_name == "imagenet_v2":
-        if dataset_kwargs["variant"] != "MATCHED_FREQUENCY":
-          return
+      if (dataset_name == "imagenet_v2"
+          and dataset_kwargs["variant"] != "MATCHED_FREQUENCY"):
+        return
 
       for metric_key, metric_value in metric_results.items():
         key = self._get_full_metric_key(dataset_name, metric_name, metric_key)

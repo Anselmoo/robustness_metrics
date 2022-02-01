@@ -65,14 +65,12 @@ def parse_name_and_kwargs(code: str) -> Tuple[str, List[Any], Dict[str, Any]]:
     raise ValueError(f"{code!r} is not a valid Python code.")
   name = _get_name(expr)
 
-  # Simple case without arguments.
   if isinstance(expr, ast.Name):
     return name, [], {}
-  else:
-    assert isinstance(expr, ast.Call)
-    args = [ast.literal_eval(x) for x in expr.args]
-    kwargs = {kv.arg: ast.literal_eval(kv.value) for kv in expr.keywords}
-    return name, args, kwargs
+  assert isinstance(expr, ast.Call)
+  args = [ast.literal_eval(x) for x in expr.args]
+  kwargs = {kv.arg: ast.literal_eval(kv.value) for kv in expr.keywords}
+  return name, args, kwargs
 
 
 def standardize_spec(code: str) -> str:
@@ -92,9 +90,8 @@ def standardize_spec(code: str) -> str:
   if args:
     raise ValueError("Only kwargs are allowed.")
   sorted_kwargs = sorted(kwargs.items())
-  sorted_kwargs_str = ",".join(
-      f"{kwarg}={value!r}" for kwarg, value in sorted_kwargs)
-  if sorted_kwargs_str:
+  if sorted_kwargs_str := ",".join(
+      f"{kwarg}={value!r}" for kwarg, value in sorted_kwargs):
     return f"{name}({sorted_kwargs_str})"
   else:
     return name

@@ -35,26 +35,22 @@ STD_GCE_PREFIX = (
 
 def set_seaborn_theme():
   """Sets seaborn theme with customizations for "Revisiting Calibration"."""
-  rc = {}
-
-  rc["axes.linewidth"] = 0.4
-  rc["axes.edgecolor"] = "k"
-  rc["axes.labelpad"] = 1
-  rc["axes.titlesize"] = 8
-  rc["axes.titlepad"] = 3
-
-  rc["lines.linewidth"] = 0.5
-
-  rc["grid.linewidth"] = 0.25
-  rc["legend.fontsize"] = 5
-  rc["scatter.edgecolors"] = "face"
-
   ticksize = 2
-  rc["xtick.major.size"] = ticksize
-  rc["xtick.minor.size"] = ticksize / 2
-  rc["ytick.major.size"] = ticksize
-  rc["ytick.minor.size"] = ticksize / 2
-
+  rc = {
+      'axes.linewidth': 0.4,
+      'axes.edgecolor': 'k',
+      'axes.labelpad': 1,
+      'axes.titlesize': 8,
+      'axes.titlepad': 3,
+      'lines.linewidth': 0.5,
+      'grid.linewidth': 0.25,
+      'legend.fontsize': 5,
+      'scatter.edgecolors': 'face',
+      'xtick.major.size': ticksize,
+      'xtick.minor.size': ticksize / 2,
+      'ytick.major.size': ticksize,
+      'ytick.minor.size': ticksize / 2,
+  }
   tickwidth = rc["axes.linewidth"]
   rc["xtick.major.width"] = tickwidth
   rc["xtick.minor.width"] = tickwidth

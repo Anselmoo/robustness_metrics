@@ -137,16 +137,14 @@ def main(argv):
 
     cardinality = tf.data.experimental.cardinality(tf_dataset).numpy()
 
-    processed = 0
-    for predictions, metadata in bin_common.compute_predictions(
-        model, tf_dataset, strategy, batch_size=FLAGS.batch_size):
+    for processed, (predictions, metadata) in enumerate(bin_common.compute_predictions(
+        model, tf_dataset, strategy, batch_size=FLAGS.batch_size), start=1):
       element_ids.append(int(metadata["element_id"]))
       try:
         labels.append(int(metadata["label"]))
       except KeyError:  # Not all datasets have labels.
         pass
       pred_probs.append(np.mean(predictions.predictions, axis=0))
-      processed += 1
       if processed % 5000 == 0:
         if cardinality < 0:
           logging.info("Processed %d examples", processed)
@@ -155,10 +153,7 @@ def main(argv):
                        processed, 100 * float(processed) / cardinality)
 
     element_ids_np = np.stack(element_ids)
-    if labels:
-      labels_np = np.stack(labels)
-    else:
-      labels_np = []
+    labels_np = np.stack(labels) if labels else []
     pred_probs_np = np.stack(pred_probs)
     output_path = os.path.join(FLAGS.output_dir, dataset_name + ".npz")
     logging.info("Saving to %s", output_path)

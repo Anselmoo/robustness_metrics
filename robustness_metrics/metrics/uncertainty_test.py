@@ -88,7 +88,7 @@ class KerasMetricTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters([(name,) for name in _UNCERTAINTY_METRICS])
   def test_binary_prediction_two_predictions_per_element(self, name):
-    if "gce" == name[:3]:
+    if name[:3] == "gce":
       tempdir = self.create_tempdir().full_path
       # Need unmodified `name` to look up expected output.
       tempname = _with_tempdir(name, tempdir)
@@ -131,7 +131,7 @@ class KerasMetricTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters([(name,) for name in _UNCERTAINTY_METRICS])
   def test_binary_predictions_on_different_predictions(self, name):
-    if "gce" == name[:3]:
+    if name[:3] == "gce":
       tempdir = self.create_tempdir().full_path
       # Need unmodified `name` to look up expected output.
       tempname = _with_tempdir(name, tempdir)
@@ -180,7 +180,7 @@ class KerasMetricTest(parameterized.TestCase, tf.test.TestCase):
 
   @parameterized.parameters([(name,) for name in _UNCERTAINTY_METRICS])
   def test_tertiary_prediction(self, name):
-    if "gce" == name[:3]:
+    if name[:3] == "gce":
       tempdir = self.create_tempdir().full_path
       # Need unmodified `name` to look up expected output.
       tempname = _with_tempdir(name, tempdir)
@@ -837,19 +837,14 @@ class GeneralCalibrationErrorTest(parameterized.TestCase, tf.test.TestCase):
     self.assertAlmostEqual(correct_rmsce, metric_rmsce.result()["gce"])
 
   def generate_params():  # pylint: disable=no-method-argument
-    # "self" object cannot be passes to parameterized.
-    names = ["binning_scheme", "max_probs", "class_conditional",
-             "threshold", "norm", "num_bins"]
     parameters = [["even", "adaptive"], [True, False], [True, False],
                   [0.0, 0.01], ["l1", "l2"], [30, None]]
     list(itertools.product(*parameters))
-    count = 0
     dict_list = []
+    names = ["binning_scheme", "max_probs", "class_conditional",
+             "threshold", "norm", "num_bins"]
     for params in itertools.product(*parameters):
-      param_dict = {}
-      for i, v in enumerate(params):
-        param_dict[names[i]] = v
-      count += 1
+      param_dict = {names[i]: v for i, v in enumerate(params)}
       dict_list.append(param_dict)
     return dict_list
 

@@ -239,12 +239,7 @@ def subplot_fn(data, x, y, **kwargs):
   utils.assert_no_duplicates_in_condition(
       data, ["architecture", varying_key])
   conditions = np.unique(data[varying_key]).tolist()
-  if varying_key == "size":
-    palette = "flare"
-  elif varying_key == "steps":
-    palette = "crest"
-  else:
-    palette = "flare"
+  palette = "crest" if varying_key == "steps" else "flare"
   cmap = sns.color_palette(palette, n_colors=len(conditions), as_cmap=True)
   architectures = np.unique(data.architecture)
   for arch, markersize in zip(architectures, [30, 10]):

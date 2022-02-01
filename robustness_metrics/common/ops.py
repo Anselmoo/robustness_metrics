@@ -719,8 +719,7 @@ def fingerprint_int64(batch):
   # in little-endian order. These are then combined in base 8 to get one int64.
   hash_base = tf.constant([[256**i for i in range(8)]], dtype=tf.int64)
   hash_bytes = tf.cast(hash_bytes, dtype=tf.int64)
-  element_hashes_int64 = tf.reduce_sum(hash_bytes * hash_base, axis=1)
-  return element_hashes_int64
+  return tf.reduce_sum(hash_bytes * hash_base, axis=1)
 
 
 def combine_fingerprints(hashes1, hashes2):

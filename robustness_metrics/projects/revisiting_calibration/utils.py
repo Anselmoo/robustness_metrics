@@ -26,11 +26,7 @@ import pandas as pd
 
 def re_with_default(pattern, string, default=None):
   """Finds a regex match and returns a default value of no match is found."""
-  match = re.search(pattern, string)
-  if match:
-    return match.group()
-  else:
-    return default
+  return match.group() if (match := re.search(pattern, string)) else default
 
 
 def assert_and_get_constant(x: pd.Series):
@@ -85,8 +81,5 @@ def average_imagenet_c_corruption_types(df: pd.DataFrame,
   grouped = df.groupby(by=group_by + ["DatasetName"], as_index=False)
   # Average over ImageNet-C datasets:
   def mean(x):
-    if np.all(np.issubdtype(x.dtype, np.number)):
-      return np.mean(x)
-    else:
-      return x.iloc[0]
+    return np.mean(x) if np.all(np.issubdtype(x.dtype, np.number)) else x.iloc[0]
   return grouped.aggregate(mean)

@@ -59,10 +59,7 @@ class TaskAdaptationDatasetsTest(parameterized.TestCase, tf.test.TestCase):
     except KeyError:
       num_classes = 1000
     self.assertEqual(dataset_object.info.num_classes, num_classes)
-    if "cifar" in name:
-      expected_shape = [32, 32, 3]
-    else:
-      expected_shape = [224, 224, 3]
+    expected_shape = [32, 32, 3] if "cifar" in name else [224, 224, 3]
     dataset = dataset_object.load(preprocess_fn=None).batch(8)
     for features in dataset.take(1):
       for feature in self.necessary_fields + [label_field]:
